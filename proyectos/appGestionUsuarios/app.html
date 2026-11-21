@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados y Control Horario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilos para la barra de scroll */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 pt-20">
+
+    <!-- Barra de Navegación Superior -->
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-20">
+        <div class="container mx-auto px-4 md:px-6">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    </svg>
+                    <h1 class="text-xl font-bold text-gray-800">Control de Personal</h1>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal -->
+    <div class="container mx-auto p-4 md:p-6 max-w-4xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Panel de Empleados</h1>
+            <p class="text-gray-600 mt-1">Gestiona tus empleados y su tiempo de forma eficiente.</p>
+        </header>
+
+        <!-- Vista Principal: Lista de Empleados -->
+        <main id="main-view">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                    <div class="relative w-full sm:w-1/3">
+                        <input type="text" id="search-input" placeholder="Buscar empleado..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                         <button id="backup-btn" class="w-full sm:w-auto bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Crear Backup
+                        </button>
+                        <button id="add-employee-btn" class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Añadir Empleado
+                        </button>
+                    </div>
+                </div>
+                <div id="employee-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Las tarjetas de empleados se insertarán aquí -->
+                </div>
+                 <div id="no-employees-message" class="text-center py-10 text-gray-500 hidden">
+                    <p>No hay empleados registrados.</p>
+                    <p class="text-sm">Haz clic en "Añadir Empleado" para empezar.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Vista de Detalles del Empleado -->
+        <section id="detail-view" class="hidden">
+            <!-- El contenido se generará dinámicamente -->
+        </section>
+
+    </div>
+
+    <!-- Modal para Añadir/Editar Empleado -->
+    <div id="employee-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md modal-content transform scale-95">
+            <h2 id="modal-title" class="text-2xl font-bold mb-4">Añadir Empleado</h2>
+            <form id="employee-form">
+                <input type="hidden" id="employee-id">
+                <input type="hidden" id="existing-photo">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Foto de Perfil</label>
+                    <div class="mt-1 flex items-center gap-4">
+                        <img id="photo-preview" class="h-16 w-16 rounded-full object-cover bg-gray-200" src="https://placehold.co/96x96/E2E8F0/4A5568?text=Foto" alt="Vista previa">
+                        <input type="file" id="photo" class="block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-full file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-indigo-50 file:text-indigo-700
+                          hover:file:bg-indigo-100" accept="image/*">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" id="name" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                 <div class="mb-4">
+                    <label for="dni" class="block text-sm font-medium text-gray-700 mb-1">DNI / NIE</label>
+                    <input type="text" id="dni" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="position" class="block text-sm font-medium text-gray-700 mb-1">Puesto</label>
+                    <input type="text" id="position" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmación de Borrado -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center modal-content transform scale-95">
+            <h2 class="text-xl font-bold mb-2">¿Estás seguro?</h2>
+            <p class="text-gray-600 mb-6">Esta acción no se puede deshacer. Se borrará el empleado y todo su historial de horas.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-btn" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Backup -->
+    <div id="backup-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md modal-content transform scale-95">
+            <h2 class="text-2xl font-bold mb-4">Crear Copia de Seguridad</h2>
+            <p class="text-gray-600 mb-6">Selecciona un rango de fechas para exportar los datos de empleados y sus registros horarios.</p>
+             <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <label for="backup-start-date" class="block text-sm font-medium text-gray-700">Fecha de inicio</label>
+                    <input type="date" id="backup-start-date" class="w-full mt-1 p-2 border rounded-lg">
+                </div>
+                <div class="flex-1">
+                    <label for="backup-end-date" class="block text-sm font-medium text-gray-700">Fecha de fin</label>
+                    <input type="date" id="backup-end-date" class="w-full mt-1 p-2 border rounded-lg">
+                </div>
+            </div>
+            <div id="backup-error" class="text-red-600 text-sm mb-4 hidden"></div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-backup-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Cancelar</button>
+                <button type="button" id="generate-backup-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Generar Backup</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- CONFIGURACIÓN DE INDEXEDDB ---
+            const DB_NAME = 'EmployeeDB';
+            const DB_VERSION = 1;
+            let db;
+
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                    request.onerror = (event) => {
+                        console.error('Error al abrir IndexedDB:', event.target.error);
+                        reject('Error de base de datos');
+                    };
+
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        console.log('Base de datos abierta correctamente.');
+                        resolve();
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('employees')) {
+                            const employeeStore = db.createObjectStore('employees', { keyPath: 'id', autoIncrement: true });
+                            employeeStore.createIndex('name', 'name', { unique: false });
+                        }
+                        if (!db.objectStoreNames.contains('time_logs')) {
+                            const timeLogStore = db.createObjectStore('time_logs', { keyPath: 'id', autoIncrement: true });
+                            timeLogStore.createIndex('employeeId', 'employeeId', { unique: false });
+                            timeLogStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        }
+                    };
+                });
+            }
+
+            // --- SELECTORES DEL DOM ---
+            const mainView = document.getElementById('main-view');
+            const detailView = document.getElementById('detail-view');
+            const employeeList = document.getElementById('employee-list');
+            const noEmployeesMessage = document.getElementById('no-employees-message');
+            const addEmployeeBtn = document.getElementById('add-employee-btn');
+            const searchInput = document.getElementById('search-input');
+
+            // Modal de empleado
+            const employeeModal = document.getElementById('employee-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const employeeForm = document.getElementById('employee-form');
+            const employeeIdInput = document.getElementById('employee-id');
+            const nameInput = document.getElementById('name');
+            const dniInput = document.getElementById('dni');
+            const positionInput = document.getElementById('position');
+            const photoInput = document.getElementById('photo');
+            const photoPreview = document.getElementById('photo-preview');
+            const existingPhotoInput = document.getElementById('existing-photo');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            // Modal de borrado
+            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+            // Modal de backup
+            const backupBtn = document.getElementById('backup-btn');
+            const backupModal = document.getElementById('backup-modal');
+            const cancelBackupBtn = document.getElementById('cancel-backup-btn');
+            const generateBackupBtn = document.getElementById('generate-backup-btn');
+            const backupStartDateInput = document.getElementById('backup-start-date');
+            const backupEndDateInput = document.getElementById('backup-end-date');
+            const backupError = document.getElementById('backup-error');
+
+
+            // --- LÓGICA DE LA UI ---
+
+            const showView = (view) => {
+                mainView.classList.toggle('hidden', view !== 'main');
+                detailView.classList.toggle('hidden', view !== 'detail');
+            };
+
+            const openModal = (modal) => {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            };
+
+            const closeModal = (modal) => {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+            
+            // --- OPERACIONES CRUD DE EMPLEADOS ---
+
+            const renderEmployees = async (filter = '') => {
+                if (!db) return;
+                const transaction = db.transaction('employees', 'readonly');
+                const store = transaction.objectStore('employees');
+                const request = store.getAll();
+
+                request.onsuccess = (event) => {
+                    const employees = event.target.result;
+                    employeeList.innerHTML = '';
+                    
+                    const filteredEmployees = employees.filter(emp => 
+                        emp.name.toLowerCase().includes(filter.toLowerCase()) || 
+                        emp.position.toLowerCase().includes(filter.toLowerCase()) ||
+                        (emp.dni && emp.dni.toLowerCase().includes(filter.toLowerCase()))
+                    );
+
+                    if (filteredEmployees.length === 0) {
+                        noEmployeesMessage.classList.toggle('hidden', employees.length > 0);
+                        employeeList.innerHTML = filter ? '<p class="text-center text-gray-500 col-span-full">No se encontraron empleados con ese criterio.</p>' : '';
+                    } else {
+                        noEmployeesMessage.classList.add('hidden');
+                        filteredEmployees.forEach(employee => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-gray-100 p-4 rounded-lg flex items-center justify-between hover:bg-gray-200 transition-colors cursor-pointer';
+                            card.dataset.id = employee.id;
+                            const photoSrc = employee.photo ? employee.photo : `https://placehold.co/48x48/E2E8F0/4A5568?text=${encodeURIComponent(employee.name.charAt(0))}`;
+                            
+                            card.innerHTML = `
+                                <div class="flex items-center gap-4 truncate">
+                                    <img src="${photoSrc}" alt="Foto de ${employee.name}" class="h-12 w-12 rounded-full object-cover flex-shrink-0">
+                                    <div class="truncate">
+                                        <h3 class="font-semibold text-lg text-gray-800 truncate">${employee.name}</h3>
+                                        <p class="text-sm text-gray-600 truncate">${employee.position}</p>
+                                    </div>
+                                </div>
+                                <svg class="w-6 h-6 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            `;
+                            card.addEventListener('click', () => renderDetailView(employee.id));
+                            employeeList.appendChild(card);
+                        });
+                    }
+                };
+                 request.onerror = (event) => console.error('Error al obtener empleados:', event.target.error);
+            };
+
+            addEmployeeBtn.addEventListener('click', () => {
+                employeeForm.reset();
+                employeeIdInput.value = '';
+                modalTitle.textContent = 'Añadir Empleado';
+                photoPreview.src = 'https://placehold.co/96x96/E2E8F0/4A5568?text=Foto';
+                existingPhotoInput.value = '';
+                openModal(employeeModal);
+            });
+
+            cancelBtn.addEventListener('click', () => closeModal(employeeModal));
+            
+            photoInput.addEventListener('change', () => {
+                const file = photoInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        photoPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            employeeForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                
+                const file = photoInput.files[0];
+                const employeeData = {
+                    name: nameInput.value.trim(),
+                    position: positionInput.value.trim(),
+                    dni: dniInput.value.trim(),
+                };
+
+                const saveEmployee = (photoData) => {
+                    if (photoData) {
+                        employeeData.photo = photoData;
+                    } else if (existingPhotoInput.value) {
+                        employeeData.photo = existingPhotoInput.value;
+                    }
+
+                    const id = employeeIdInput.value ? parseInt(employeeIdInput.value) : null;
+                    const transaction = db.transaction('employees', 'readwrite');
+                    const store = transaction.objectStore('employees');
+                    
+                    let request;
+                    if (id) {
+                        request = store.put({ ...employeeData, id });
+                    } else {
+                        employeeData.createdAt = new Date();
+                        request = store.add(employeeData);
+                    }
+
+                    request.onsuccess = () => {
+                        closeModal(employeeModal);
+                        renderEmployees(searchInput.value);
+                        if (id) {
+                            renderDetailView(id);
+                        }
+                    };
+                    request.onerror = (event) => console.error('Error al guardar empleado:', event.target.error);
+                };
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        saveEmployee(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    saveEmployee(null); // No new photo selected
+                }
+            });
+            
+            searchInput.addEventListener('input', () => renderEmployees(searchInput.value));
+
+            // --- VISTA DE DETALLE Y CONTROL HORARIO ---
+            
+            const getEmployeeStatus = (employeeId) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction('time_logs', 'readonly');
+                    const store = transaction.objectStore('time_logs');
+                    const index = store.index('employeeId');
+                    const request = index.getAll(IDBKeyRange.only(employeeId));
+                    
+                    request.onsuccess = (event) => {
+                        const logs = event.target.result.sort((a, b) => b.timestamp - a.timestamp);
+                        if (logs.length === 0) {
+                            resolve({ status: 'out', lastLog: null });
+                            return;
+                        }
+                        const lastLog = logs[0];
+                        let status;
+                        switch(lastLog.type) {
+                            case 'in':
+                            case 'pause_end':
+                                status = 'in';
+                                break;
+                            case 'pause_start':
+                                status = 'paused';
+                                break;
+                            case 'out':
+                            default:
+                                status = 'out';
+                                break;
+                        }
+                        resolve({ status, lastLog });
+                    };
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            };
+
+            const addTimeLog = async (employeeId, type) => {
+                const log = { employeeId, type, timestamp: new Date() };
+                const transaction = db.transaction('time_logs', 'readwrite');
+                const store = transaction.objectStore('time_logs');
+                const request = store.add(log);
+                
+                return new Promise((resolve, reject) => {
+                   request.onsuccess = () => resolve();
+                   request.onerror = (event) => reject(event.target.error);
+                });
+            };
+
+            const renderDetailView = async (id) => {
+                const transaction = db.transaction('employees', 'readonly');
+                const store = transaction.objectStore('employees');
+                const request = store.get(id);
+
+                request.onsuccess = async (event) => {
+                    const employee = event.target.result;
+                    if (!employee) {
+                        showView('main');
+                        return;
+                    }
+
+                    const { status } = await getEmployeeStatus(id);
+
+                    let statusText, statusColor, actionButtons;
+                    switch (status) {
+                        case 'in':
+                            statusText = 'Trabajando';
+                            statusColor = 'bg-green-100 text-green-800';
+                            actionButtons = `
+                                <button data-action="pause_start" class="bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors w-full sm:w-auto">Iniciar Pausa</button>
+                                <button data-action="out" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition-colors w-full sm:w-auto">Finalizar Jornada</button>
+                            `;
+                            break;
+                        case 'paused':
+                            statusText = 'En Pausa';
+                            statusColor = 'bg-yellow-100 text-yellow-800';
+                            actionButtons = `
+                                <button data-action="pause_end" class="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors w-full sm:w-auto">Reanudar Trabajo</button>
+                            `;
+                            break;
+                        default: // 'out'
+                            statusText = 'Fuera de servicio';
+                            statusColor = 'bg-gray-200 text-gray-800';
+                            actionButtons = `
+                                <button data-action="in" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors w-full sm:w-auto">Iniciar Jornada</button>
+                            `;
+                            break;
+                    }
+                    
+                    const photoSrc = employee.photo ? employee.photo : `https://placehold.co/96x96/E2E8F0/4A5568?text=${encodeURIComponent(employee.name.charAt(0))}`;
+
+                    detailView.innerHTML = `
+                        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+                            <div class="flex items-start justify-between mb-6 gap-4">
+                                <button id="back-btn" class="p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                
+                                <div class="text-center flex-grow">
+                                    <img src="${photoSrc}" alt="Foto de ${employee.name}" class="h-24 w-24 rounded-full object-cover mx-auto border-4 border-white shadow-lg">
+                                    <h2 class="text-2xl font-bold mt-3">${employee.name}</h2>
+                                    <p class="text-gray-600">${employee.position}</p>
+                                    <p class="text-sm text-gray-500 mt-1">DNI/NIE: ${employee.dni || 'No especificado'}</p>
+                                </div>
+
+                                <div class="flex flex-col gap-2 flex-shrink-0">
+                                     <button id="edit-current-employee-btn" title="Editar" class="p-2 rounded-full hover:bg-gray-100">
+                                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
+                                    </button>
+                                     <button id="delete-current-employee-btn" title="Eliminar" class="p-2 rounded-full hover:bg-red-100">
+                                        <svg class="w-6 h-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Panel de estado y acciones -->
+                            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div class="flex items-center">
+                                        <span class="font-semibold mr-2">Estado:</span>
+                                        <span class="px-3 py-1 text-sm font-medium rounded-full ${statusColor}">${statusText}</span>
+                                    </div>
+                                    <div id="action-buttons-container" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                        ${actionButtons}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Panel de cálculo de horas -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-bold text-lg mb-3">Calcular Horas Trabajadas</h3>
+                                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                                    <div class="flex-1">
+                                        <label for="start-date" class="block text-sm font-medium text-gray-700">Fecha de inicio</label>
+                                        <input type="date" id="start-date" class="w-full mt-1 p-2 border rounded-lg">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label for="end-date" class="block text-sm font-medium text-gray-700">Fecha de fin</label>
+                                        <input type="date" id="end-date" class="w-full mt-1 p-2 border rounded-lg">
+                                    </div>
+                                </div>
+                                <button id="calculate-hours-btn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Calcular</button>
+                                
+                                <div id="hours-result" class="mt-4"></div>
+                            </div>
+                        </div>
+                    `;
+                    showView('detail');
+                    attachDetailViewListeners(employee);
+                };
+                request.onerror = (event) => console.error('Error al obtener empleado:', event.target.error);
+            };
+
+            const attachDetailViewListeners = (employee) => {
+                // Note: DOM reconstruction via innerHTML in renderDetailView
+                // automatically removes old event listeners, preventing duplication.
+
+                // Back button
+                document.getElementById('back-btn').addEventListener('click', () => {
+                    showView('main');
+                    renderEmployees(searchInput.value);
+                });
+
+                // Edit button
+                document.getElementById('edit-current-employee-btn').addEventListener('click', () => {
+                     modalTitle.textContent = 'Editar Empleado';
+                     employeeIdInput.value = employee.id;
+                     nameInput.value = employee.name;
+                     positionInput.value = employee.position;
+                     dniInput.value = employee.dni || '';
+                     if (employee.photo) {
+                        photoPreview.src = employee.photo;
+                        existingPhotoInput.value = employee.photo;
+                     } else {
+                        photoPreview.src = 'https://placehold.co/96x96/E2E8F0/4A5568?text=Foto';
+                        existingPhotoInput.value = '';
+                     }
+                     openModal(employeeModal);
+                });
+
+                // Delete button
+                document.getElementById('delete-current-employee-btn').addEventListener('click', () => {
+                     openModal(deleteConfirmModal);
+                     confirmDeleteBtn.dataset.id = employee.id;
+                });
+
+                // Calculate hours button
+                document.getElementById('calculate-hours-btn').addEventListener('click', () => calculateAndDisplayHours(employee.id));
+
+                // Action buttons container (for pause/in/out)
+                document.getElementById('action-buttons-container').addEventListener('click', async (event) => {
+                    const action = event.target.dataset.action;
+                    if (action) {
+                        await addTimeLog(employee.id, action);
+                        renderDetailView(employee.id); // Recargar vista para reflejar el cambio de estado
+                    }
+                });
+            };
+
+            const calculateAndDisplayHours = (employeeId) => {
+                const startDateInput = document.getElementById('start-date');
+                const endDateInput = document.getElementById('end-date');
+                const resultDiv = document.getElementById('hours-result');
+
+                let start = startDateInput.value ? new Date(startDateInput.value) : null;
+                let end = endDateInput.value ? new Date(endDateInput.value) : null;
+
+                if (!start || !end || start > end) {
+                    resultDiv.innerHTML = '<p class="text-red-600">Por favor, selecciona un rango de fechas válido.</p>';
+                    return;
+                }
+                
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+
+                const transaction = db.transaction('time_logs', 'readonly');
+                const store = transaction.objectStore('time_logs');
+                const index = store.index('timestamp');
+                const range = IDBKeyRange.bound(start, end);
+                const request = index.getAll(range);
+                
+                request.onerror = (event) => resultDiv.innerHTML = '<p class="text-red-600">Error al leer los registros.</p>';
+                request.onsuccess = (event) => {
+                    const allLogs = event.target.result;
+                    const employeeLogs = allLogs
+                        .filter(log => log.employeeId === employeeId)
+                        .sort((a, b) => a.timestamp - b.timestamp);
+
+                    let totalMilliseconds = 0;
+                    let lastInTime = null;
+                    let sessions = [];
+                    let currentSession = null;
+
+                    employeeLogs.forEach(log => {
+                        switch(log.type) {
+                            case 'in':
+                                lastInTime = log.timestamp;
+                                if (!currentSession) {
+                                    currentSession = { start: log.timestamp, end: null, work_periods: [{start: log.timestamp, end: null}] };
+                                }
+                                break;
+                            case 'pause_start':
+                                if (lastInTime) {
+                                    totalMilliseconds += log.timestamp - lastInTime;
+                                    if(currentSession) currentSession.work_periods[currentSession.work_periods.length - 1].end = log.timestamp;
+                                }
+                                lastInTime = null;
+                                break;
+                            case 'pause_end':
+                                lastInTime = log.timestamp;
+                                if(currentSession) currentSession.work_periods.push({start: log.timestamp, end: null});
+                                break;
+                            case 'out':
+                                if (lastInTime) {
+                                    totalMilliseconds += log.timestamp - lastInTime;
+                                     if(currentSession) {
+                                        currentSession.work_periods[currentSession.work_periods.length - 1].end = log.timestamp;
+                                        currentSession.end = log.timestamp;
+                                        sessions.push(currentSession);
+                                        currentSession = null;
+                                    }
+                                }
+                                lastInTime = null;
+                                break;
+                        }
+                    });
+                    
+                    const totalHours = totalMilliseconds / (1000 * 60 * 60);
+                    const hours = Math.floor(totalHours);
+                    const minutes = Math.round((totalHours - hours) * 60);
+
+                    let detailsHtml = sessions.map(session => {
+                        const sessionStart = new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(session.start);
+                        const sessionEnd = session.end ? new Intl.DateTimeFormat('es-ES', { timeStyle: 'short' }).format(session.end) : 'En curso';
+                        
+                        const sessionMillis = session.work_periods.reduce((acc, period) => {
+                            const periodEnd = period.end || new Date(); // Considerar periodo actual como hasta ahora
+                            return acc + (periodEnd - period.start);
+                        }, 0);
+
+                        const sessionDuration = sessionMillis / (1000 * 60 * 60);
+                        const sessionHours = Math.floor(sessionDuration);
+                        const sessionMinutes = Math.round((sessionDuration - sessionHours) * 60);
+
+                        return `<div class="p-2 border-b"><p><strong>Jornada:</strong> ${sessionStart} - ${sessionEnd}</p><p class="text-sm text-gray-600">Duración total: ${sessionHours}h ${sessionMinutes}m</p></div>`;
+                    }).join('');
+
+                    resultDiv.innerHTML = `
+                        <div class="mt-4 p-4 bg-white rounded-lg border">
+                           <p class="text-lg font-semibold">Total de Horas: <span class="text-indigo-600">${hours} horas y ${minutes} minutos</span></p>
+                           <div class="mt-3">
+                                <h4 class="font-semibold mb-2">Desglose de Jornadas:</h4>
+                                <div class="max-h-48 overflow-y-auto text-sm">${detailsHtml || '<p class="text-gray-500">No hay jornadas completas en este periodo.</p>'}</div>
+                           </div>
+                        </div>
+                    `;
+                };
+            };
+
+            // --- LÓGICA DE BACKUP ---
+            backupBtn.addEventListener('click', () => {
+                backupError.classList.add('hidden');
+                backupError.textContent = '';
+                openModal(backupModal);
+            });
+            cancelBackupBtn.addEventListener('click', () => closeModal(backupModal));
+
+            generateBackupBtn.addEventListener('click', async () => {
+                let start = backupStartDateInput.value ? new Date(backupStartDateInput.value) : null;
+                let end = backupEndDateInput.value ? new Date(backupEndDateInput.value) : null;
+
+                if (!start || !end || start > end) {
+                    backupError.textContent = 'Por favor, selecciona un rango de fechas válido.';
+                    backupError.classList.remove('hidden');
+                    return;
+                }
+                backupError.classList.add('hidden');
+                
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+
+                const transaction = db.transaction(['employees', 'time_logs'], 'readonly');
+                const employeeStore = transaction.objectStore('employees');
+                const timeLogStore = transaction.objectStore('time_logs');
+
+                const employeesRequest = employeeStore.getAll();
+                const timeLogIndex = timeLogStore.index('timestamp');
+                const timeLogsRequest = timeLogIndex.getAll(IDBKeyRange.bound(start, end));
+
+                Promise.all([
+                    new Promise(res => employeesRequest.onsuccess = e => res(e.target.result)),
+                    new Promise(res => timeLogsRequest.onsuccess = e => res(e.target.result))
+                ]).then(([employees, timeLogs]) => {
+                    const backupData = {
+                        employees,
+                        time_logs: timeLogs,
+                        backup_info: {
+                            date: new Date().toISOString(),
+                            range_start: start.toISOString(),
+                            range_end: end.toISOString()
+                        }
+                    };
+
+                    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup_empleados_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    closeModal(backupModal);
+                }).catch(err => {
+                    backupError.textContent = 'Error al generar el backup: ' + err.message;
+                    backupError.classList.remove('hidden');
+                });
+            });
+            
+            // --- INICIALIZACIÓN ---
+            (async () => {
+                try {
+                    await initDB();
+                    await renderEmployees();
+                } catch (error) {
+                    document.body.innerHTML = `<div class="text-center p-10 text-red-600">
+                        <h1 class="text-2xl font-bold">Error Crítico</h1>
+                        <p>No se pudo iniciar la aplicación. La base de datos no está disponible.</p>
+                        <p class="text-sm mt-2">${error}</p>
+                    </div>`;
+                }
+            })();
+        });
+    </script>
+
+</body>
+</html>

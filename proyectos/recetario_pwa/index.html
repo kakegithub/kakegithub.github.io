@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF7043">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recetario de Cocina con IndexedDB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #FF7043;
+            --primary-light: #ff9e7d;
+            --primary-dark: #E64A19;
+            --secondary: #26A69A;
+            --danger: #e53935;
+            --light: #F5F5F5;
+            --dark: #333;
+            --gray: #757575;
+            --light-gray: #e0e0e0;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f9f9f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .header-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .header-nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .header-nav a:hover::after {
+            width: 100%;
+        }
+
+        /* --- Contenedor Principal --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* --- Sección del Formulario --- */
+        .form-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(38, 166, 154, 0.2);
+        }
+
+        input[type="file"].form-control {
+            padding: 0.4rem;
+        }
+
+        .dynamic-list .list-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dynamic-list .list-item input {
+            flex-grow: 1;
+        }
+
+        .add-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .add-btn:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Controles y Búsqueda --- */
+        .app-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-export {
+            background-color: #FF9800;
+        }
+
+        .btn-import {
+            background-color: #4CAF50;
+        }
+
+        .search-box {
+            position: relative;
+            grid-column: 1 / -1;
+            /* Ocupa todo el ancho */
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 3rem;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        /* --- Contenedor de Recetas --- */
+        .recipes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .recipe-img-container {
+            height: 200px;
+            background-color: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+
+        .recipe-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .recipe-content {
+            padding: 1.2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recipe-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .recipe-section h4 {
+            color: var(--secondary);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .recipe-ingredients,
+        .recipe-steps {
+            padding-left: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .recipe-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--light-gray);
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            padding: 0.5rem;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+        }
+
+        .action-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .action-btn.delete-btn:hover {
+            background-color: #ffdddd;
+            color: var(--danger);
+        }
+
+        .action-btn.whatsapp:hover {
+            background-color: #dcf8c6;
+            color: #075e54;
+        }
+
+        .action-btn.email:hover {
+            background-color: #fce8e6;
+            color: #c5221f;
+        }
+
+        /* --- Estado Vacío --- */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+            background: #fafafa;
+            border-radius: 16px;
+            border: 2px dashed var(--light-gray);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--light-gray);
+        }
+
+        /* --- Estilos de Modales --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 25px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s;
+            position: relative;
+        }
+
+        #confirm-modal .modal-content {
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            text-align: center;
+        }
+
+        .modal-body {
+            text-align: left;
+            color: var(--gray);
+        }
+
+        .modal-body p {
+            margin-bottom: 1rem;
+        }
+
+        .modal-body a {
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: var(--dark);
+        }
+
+        #confirm-modal p {
+            margin-bottom: 25px;
+            color: var(--gray);
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .confirm-modal-buttons .btn {
+            flex-grow: 1;
+        }
+
+        /* --- Animaciones --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* --- Diseño Adaptable --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .form-section {
+                padding: 1rem;
+            }
+
+            .app-controls {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn span.text {
+                display: none;
+            }
+
+            .header-nav {
+                gap: 1rem;
+            }
+
+            .header-nav a {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <h1>Mi Recetario</h1>
+            </div>
+            <nav class="header-nav">
+                <a href="#" id="help-link">Ayuda</a>
+                <a href="#" id="contact-link">Contacto</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="form-section" id="form-section">
+            <h2 class="section-title">
+                <i class="fas fa-plus-circle"></i>
+                <span id="form-title">Nueva Receta</span>
+            </h2>
+            <form id="recipe-form">
+                <div class="form-group">
+                    <label for="recipe-name">Nombre de la Receta</label>
+                    <input type="text" id="recipe-name" class="form-control" placeholder="Ej: Paella valenciana"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipe-image-file">Imagen de la Receta</label>
+                    <input type="file" id="recipe-image-file" class="form-control" accept="image/*">
+                    <div id="image-preview" style="margin-top: 1rem; display: none;">
+                        <img id="preview-img" style="max-width: 100%; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ingredientes</label>
+                    <div id="ingredients-list" class="dynamic-list"></div>
+                    <button type="button" class="add-btn" id="add-ingredient-btn">+</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Instrucciones</label>
+                    <div id="steps-list" class="dynamic-list"></div>
+                    <button type="button" class="add-btn" id="add-step-btn">+</button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn"><i class="fas fa-save"></i>&nbsp; Guardar</button>
+                    <button type="button" class="btn btn-danger" id="cancel-edit" style="display: none;"><i
+                            class="fas fa-times"></i>&nbsp; Cancelar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="recipes-section">
+            <div class="app-controls">
+                <button class="btn btn-export" id="export-btn">
+                    <i class="fas fa-file-export"></i>
+                    <span class="text"> Exportar</span>
+                </button>
+                <label class="btn btn-import">
+                    <i class="fas fa-file-import"></i>
+                    <span class="text"> Importar</span>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </label>
+                <button class="btn btn-danger" id="clear-all-btn">
+                    <i class="fas fa-trash"></i>
+                    <span class="text"> Borrar Todo</span>
+                </button>
+            </div>
+            <div class="search-box">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="search-input" placeholder="Buscar recetas...">
+            </div>
+
+            <h2 class="section-title" style="margin-top: 2rem;">
+                <i class="fas fa-book"></i>
+                Mis Recetas (<span id="recipe-count">0</span>)
+            </h2>
+
+            <div id="recipes-container" class="recipes-container">
+            </div>
+        </section>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirm-title">¿Estás seguro?</h3>
+            <p id="confirm-text">Esta acción no se puede deshacer.</p>
+            <div class="confirm-modal-buttons">
+                <button id="confirm-cancel-btn" class="btn">Cancelar</button>
+                <button id="confirm-ok-btn" class="btn btn-danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Cómo Usar el Recetario</h3>
+            <div class="modal-body">
+                <p><strong>Añadir/Editar:</strong> Rellena el formulario y pulsa "Guardar". Para editar una receta
+                    existente, haz clic en el icono del lápiz ✏️ en ella.</p>
+                <p><strong>Eliminar:</strong> Haz clic en el icono de la papelera 🗑️ en la receta que deseas borrar. Se
+                    pedirá confirmación.</p>
+                <p><strong>Buscar:</strong> Usa la barra de búsqueda para filtrar tus recetas por nombre en tiempo real.
+                </p>
+                <p><strong>Compartir:</strong> Usa los botones de WhatsApp 🟢 o Email 📧 para compartir fácilmente los
+                    ingredientes y pasos.</p>
+                <p><strong>Importar/Exportar:</strong> Los botones de "Exportar" guardarán todas tus recetas en un
+                    archivo. "Importar" te permite cargar recetas desde ese mismo tipo de archivo.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Información de Contacto</h3>
+            <div class="modal-body">
+                <p>Esta aplicación es un proyecto de demostración para mostrar habilidades de desarrollo web.</p>
+                <p>Para cualquier duda o sugerencia, puedes contactar a través de:</p>
+                <p><strong>Email:</strong> <a href="mailto:ricardoespineiradiaz@gmail.com">kake</a>
+                </p>
+                <p><strong>Proyecto en GitHub:</strong> <a href="https://github.com/kakegithub" target="_blank"
+                        rel="noopener noreferrer">Ver en GitHub</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Estado de la aplicación
+            let state = {
+                recipes: [],
+                editingId: null,
+                currentImageData: null,
+            };
+
+            // Elementos del DOM
+            const DOM = {
+                recipeForm: document.getElementById('recipe-form'),
+                recipesContainer: document.getElementById('recipes-container'),
+                clearAllBtn: document.getElementById('clear-all-btn'),
+                cancelEditBtn: document.getElementById('cancel-edit'),
+                searchInput: document.getElementById('search-input'),
+                formTitle: document.getElementById('form-title'),
+                recipeName: document.getElementById('recipe-name'),
+                recipeImageFile: document.getElementById('recipe-image-file'),
+                imagePreview: document.getElementById('image-preview'),
+                previewImg: document.getElementById('preview-img'),
+                ingredientsList: document.getElementById('ingredients-list'),
+                stepsList: document.getElementById('steps-list'),
+                addIngredientBtn: document.getElementById('add-ingredient-btn'),
+                addStepBtn: document.getElementById('add-step-btn'),
+                exportBtn: document.getElementById('export-btn'),
+                importFile: document.getElementById('import-file'),
+                recipeCount: document.getElementById('recipe-count'),
+                formSection: document.getElementById('form-section'),
+                confirmModal: document.getElementById('confirm-modal'),
+                confirmTitle: document.getElementById('confirm-title'),
+                confirmText: document.getElementById('confirm-text'),
+                confirmOkBtn: document.getElementById('confirm-ok-btn'),
+                confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
+                helpLink: document.getElementById('help-link'),
+                contactLink: document.getElementById('contact-link'),
+                helpModal: document.getElementById('help-modal'),
+                contactModal: document.getElementById('contact-modal'),
+                closeButtons: document.querySelectorAll('.close-btn'),
+            };
+
+            // --- Gestión de IndexedDB (sin cambios) ---
+            const DB = {
+                db: null,
+                init(callback) {
+                    const request = indexedDB.open('recipeDB', 1);
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('recipes')) {
+                            db.createObjectStore('recipes', { keyPath: 'id' });
+                        }
+                    };
+
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        if (callback) callback();
+                    };
+
+                    request.onerror = (event) => {
+                        console.error('Error en la base de datos:', event.target.errorCode);
+                    };
+                },
+                add(recipe, callback) {
+                    const transaction = this.db.transaction(['recipes'], 'readwrite');
+                    const store = transaction.objectStore('recipes');
+                    const request = store.add(recipe);
+                    request.onsuccess = () => { if (callback) callback(); };
+                    request.onerror = (event) => {
+                        console.error('Error al añadir receta:', event.target.error);
+                        if (event.target.error.name === 'QuotaExceededError') {
+                            alert("Error al guardar: El almacenamiento del navegador está lleno. Intenta usar una imagen más pequeña.");
+                        }
+                    };
+                },
+                update(recipe, callback) {
+                    const transaction = this.db.transaction(['recipes'], 'readwrite');
+                    const store = transaction.objectStore('recipes');
+                    const request = store.put(recipe);
+                    request.onsuccess = () => { if (callback) callback(); };
+                    request.onerror = (event) => {
+                        console.error('Error al actualizar receta:', event.target.error);
+                        if (event.target.error.name === 'QuotaExceededError') {
+                            alert("Error al guardar la edición: El almacenamiento está lleno. La nueva imagen puede ser demasiado grande.");
+                        }
+                    };
+                },
+                getAll(callback) {
+                    const transaction = this.db.transaction(['recipes'], 'readonly');
+                    const store = transaction.objectStore('recipes');
+                    const request = store.getAll();
+                    request.onsuccess = () => { if (callback) callback(request.result); };
+                    request.onerror = () => { console.error('Error al obtener las recetas:', request.error); };
+                },
+                delete(id, callback) {
+                    const transaction = this.db.transaction(['recipes'], 'readwrite');
+                    const store = transaction.objectStore('recipes');
+                    const request = store.delete(id);
+                    request.onsuccess = () => { if (callback) callback(); };
+                    request.onerror = () => { console.error('Error al eliminar receta:', request.error); };
+                },
+                clear(callback) {
+                    const transaction = this.db.transaction(['recipes'], 'readwrite');
+                    const store = transaction.objectStore('recipes');
+                    const request = store.clear();
+                    request.onsuccess = () => { if (callback) callback(); };
+                    request.onerror = () => { console.error('Error al limpiar las recetas:', request.error); };
+                },
+                import(recipes, callback) {
+                    if (!Array.isArray(recipes) || recipes.length === 0) {
+                        if (callback) callback();
+                        return;
+                    }
+                    const transaction = this.db.transaction(['recipes'], 'readwrite');
+                    const store = transaction.objectStore('recipes');
+                    recipes.forEach(recipe => {
+                        if (recipe.id && recipe.name) {
+                            const request = store.add(recipe);
+                            request.onerror = (e) => {
+                                if (e.target.error.name !== 'ConstraintError') {
+                                    console.error("Error importando receta:", recipe.id, e.target.error);
+                                }
+                            };
+                        }
+                    });
+                    transaction.oncomplete = () => { if (callback) callback(); };
+                    transaction.onerror = (event) => { console.error('Error durante la importación:', event.target.error); };
+                }
+            };
+
+            // --- Lógica de Modales ---
+            function openModal(modal) {
+                if (modal) modal.style.display = 'flex';
+            }
+
+            function closeModal(modal) {
+                if (modal) modal.style.display = 'none';
+            }
+
+            // Confirmación
+            let confirmCallback = null;
+            function showConfirmModal(title, text, callback) {
+                DOM.confirmTitle.textContent = title;
+                DOM.confirmText.textContent = text;
+                confirmCallback = callback;
+                openModal(DOM.confirmModal);
+            }
+            function hideConfirmModal() {
+                closeModal(DOM.confirmModal);
+                confirmCallback = null;
+            }
+            DOM.confirmOkBtn.addEventListener('click', () => {
+                if (confirmCallback) confirmCallback();
+                hideConfirmModal();
+            });
+            DOM.confirmCancelBtn.addEventListener('click', hideConfirmModal);
+
+            // Ayuda y Contacto
+            DOM.helpLink.addEventListener('click', (e) => { e.preventDefault(); openModal(DOM.helpModal); });
+            DOM.contactLink.addEventListener('click', (e) => { e.preventDefault(); openModal(DOM.contactModal); });
+            DOM.closeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    closeModal(btn.closest('.modal'));
+                });
+            });
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    closeModal(e.target);
+                }
+            });
+
+            // --- Funciones Principales de la App (sin cambios) ---
+            const renderRecipes = () => {
+                const searchTerm = DOM.searchInput.value.toLowerCase();
+                const filteredRecipes = state.recipes.filter(recipe =>
+                    recipe.name.toLowerCase().includes(searchTerm)
+                );
+                DOM.recipesContainer.innerHTML = '';
+                DOM.recipeCount.textContent = filteredRecipes.length;
+                if (filteredRecipes.length === 0 && searchTerm === '') {
+                    DOM.recipesContainer.innerHTML = `<div class="empty-state"><i class="fas fa-utensil-spoon"></i><h3>No hay recetas</h3><p>Añade una nueva para empezar.</p></div>`;
+                    return;
+                }
+                filteredRecipes.forEach(recipe => {
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.dataset.id = recipe.id;
+                    card.innerHTML = `
+                <div class="recipe-img-container">
+                    ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" class="recipe-img">` : `<i class="fas fa-image fa-3x"></i>`}
+                </div>
+                <div class="recipe-content">
+                    <h3 class="recipe-title">${recipe.name}</h3>
+                    <div class="recipe-section">
+                        <h4>Ingredientes</h4>
+                        <ul class="recipe-ingredients">${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}</ul>
+                    </div>
+                    <div class="recipe-section">
+                        <h4>Instrucciones</h4>
+                        <ol class="recipe-steps">${recipe.steps.map(step => `<li>${step}</li>`).join('')}</ol>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="action-btn whatsapp" title="Compartir por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                        <button class="action-btn email" title="Compartir por Email"><i class="fas fa-envelope"></i></button>
+                        <button class="action-btn edit-btn" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete-btn" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+                    DOM.recipesContainer.appendChild(card);
+                });
+            };
+            const resetForm = () => {
+                DOM.recipeForm.reset();
+                state.editingId = null;
+                state.currentImageData = null;
+                DOM.ingredientsList.innerHTML = '';
+                DOM.stepsList.innerHTML = '';
+                addDynamicField('ingrediente');
+                addDynamicField('paso');
+                DOM.formTitle.textContent = 'Nueva Receta';
+                DOM.cancelEditBtn.style.display = 'none';
+                DOM.imagePreview.style.display = 'none';
+                DOM.previewImg.src = '';
+            };
+            const addDynamicField = (type, value = '') => {
+                const container = type === 'ingrediente' ? DOM.ingredientsList : DOM.stepsList;
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `<input type="text" class="form-control" placeholder="Añadir ${type}" value="${value}">`;
+                container.appendChild(item);
+            };
+
+            // --- Event Handlers de la App (sin cambios) ---
+            DOM.recipeForm.addEventListener('submit', e => {
+                e.preventDefault();
+                const name = DOM.recipeName.value.trim();
+                if (!name) return;
+                const ingredients = [...DOM.ingredientsList.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean);
+                const steps = [...DOM.stepsList.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean);
+                const recipeData = { id: state.editingId || crypto.randomUUID(), name, image: state.currentImageData, ingredients, steps };
+                if (state.editingId) {
+                    DB.update(recipeData, () => {
+                        const index = state.recipes.findIndex(r => r.id === state.editingId);
+                        if (index > -1) state.recipes[index] = recipeData;
+                        resetForm();
+                        renderRecipes();
+                    });
+                } else {
+                    DB.add(recipeData, () => {
+                        state.recipes.push(recipeData);
+                        resetForm();
+                        renderRecipes();
+                    });
+                }
+            });
+            DOM.recipeImageFile.addEventListener('change', e => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = event => {
+                    state.currentImageData = event.target.result;
+                    DOM.previewImg.src = event.target.result;
+                    DOM.imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+            DOM.recipesContainer.addEventListener('click', e => {
+                const card = e.target.closest('.recipe-card'); if (!card) return;
+                const id = card.dataset.id;
+                const recipe = state.recipes.find(r => r.id === id);
+                if (e.target.closest('.edit-btn')) {
+                    state.editingId = id; state.currentImageData = recipe.image;
+                    DOM.recipeName.value = recipe.name;
+                    DOM.imagePreview.style.display = recipe.image ? 'block' : 'none';
+                    DOM.previewImg.src = recipe.image || '';
+                    DOM.ingredientsList.innerHTML = ''; recipe.ingredients.forEach(ing => addDynamicField('ingrediente', ing));
+                    DOM.stepsList.innerHTML = ''; recipe.steps.forEach(step => addDynamicField('paso', step));
+                    DOM.formTitle.textContent = 'Editar Receta';
+                    DOM.cancelEditBtn.style.display = 'inline-flex';
+                    DOM.formSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                if (e.target.closest('.delete-btn')) {
+                    showConfirmModal('Eliminar Receta', `¿Seguro que quieres eliminar "${recipe.name}"?`, () => {
+                        DB.delete(id, () => {
+                            state.recipes = state.recipes.filter(r => r.id !== id);
+                            renderRecipes();
+                        });
+                    });
+                }
+                if (e.target.closest('.whatsapp') || e.target.closest('.email')) {
+                    let text = `*${recipe.name}*\n\n*Ingredientes:*\n${recipe.ingredients.map(i => `- ${i}`).join('\n')}\n\n*Instrucciones:*\n${recipe.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+                    if (e.target.closest('.whatsapp')) {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                    } else {
+                        window.location.href = `mailto:?subject=Receta: ${recipe.name}&body=${encodeURIComponent(text)}`;
+                    }
+                }
+            });
+            DOM.clearAllBtn.addEventListener('click', () => {
+                if (state.recipes.length === 0) return;
+                showConfirmModal('Borrar Todo', '¿Seguro que quieres eliminar TODAS tus recetas?', () => {
+                    DB.clear(() => {
+                        state.recipes = [];
+                        renderRecipes();
+                    });
+                });
+            });
+            DOM.addIngredientBtn.addEventListener('click', () => addDynamicField('ingrediente'));
+            DOM.addStepBtn.addEventListener('click', () => addDynamicField('paso'));
+            DOM.cancelEditBtn.addEventListener('click', resetForm);
+            DOM.searchInput.addEventListener('input', renderRecipes);
+            DOM.exportBtn.addEventListener('click', () => {
+                if (state.recipes.length === 0) return;
+                const dataStr = JSON.stringify(state.recipes, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'recetas.json'; a.click();
+                URL.revokeObjectURL(url);
+            });
+            DOM.importFile.addEventListener('change', e => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if (Array.isArray(imported)) {
+                            DB.import(imported, () => {
+                                DB.getAll(recipes => {
+                                    state.recipes = recipes;
+                                    renderRecipes();
+                                });
+                            });
+                        }
+                    } catch (err) { alert('Error al importar el archivo.'); }
+                };
+                reader.readAsText(file); e.target.value = '';
+            });
+
+            // --- Inicialización ---
+            function initializeApp() {
+                DB.init(() => {
+                    DB.getAll(recipes => {
+                        state.recipes = recipes || [];
+                        renderRecipes();
+                        resetForm();
+                    });
+                });
+
+
+                // Registro del Service Worker para modo offline
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        navigator.serviceWorker.register('./sw.js')
+                            .then(registration => console.log('Service Worker registrado con éxito.'))
+                            .catch(err => console.log('Fallo en el registro del Service Worker:', err));
+                    });
+                }
+            }
+
+            initializeApp();
+        });
+    </script>
+</body>
+
+</html>
